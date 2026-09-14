@@ -1,8 +1,6 @@
 const app = require("./app");
 const environment = require("./config/environment");
 const connectDatabase = require("./config/database");
-const https = require("https");
-const fs = require("fs");
 
 require("./models/User");
 require("./models/Event");
@@ -10,18 +8,13 @@ require("./models/Registration");
 require("./models/Attendance");
 require("./models/Notification");
 
-const sslOptions = {
-  key: fs.readFileSync("./ssl/backend-key.pem"),
-  cert: fs.readFileSync("./ssl/backend.pem"),
-};
-
 const startServer = async () => {
   await connectDatabase();
 
-  const server = https.createServer(sslOptions, app);
+  const port = process.env.PORT || environment.port || 3000;
 
-  server.listen(environment.port, "0.0.0.0", () => {
-    console.log(`HTTPS server running on port ${environment.port}`);
+  const server = app.listen(port, "0.0.0.0", () => {
+    console.log(`HTTP server running on port ${port}`);
     console.log(`Environment: ${environment.nodeEnv}`);
   });
 
@@ -35,4 +28,7 @@ const startServer = async () => {
   });
 };
 
-startServer();
+startServer().catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
+});

@@ -10,13 +10,24 @@ const registrationRoutes = require("./routes/registration.routes");
 const attendanceRoutes = require("./routes/attendance.routes");
 const notificationRoutes = require("./routes/notification.routes");
 const adminRoutes = require("./routes/admin.routes");
-
+app.set("trust proxy", 1);
 app.use(helmet());
-/* * CORS */
+
 //app.use(cors({ origin: environment.frontendUrl, credentials: true }));
+const allowedOrigins = [
+  "http://localhost:4200",
+  "https://your-angular-app-url.azurestaticapps.net",
+];
+
 app.use(
   cors({
-    origin: environment.frontendUrl,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("CORS origin not allowed"));
+    },
     credentials: true,
   }),
 );
