@@ -92,9 +92,9 @@ const login = async ({ loginId, password }) => {
       role: user.role,
     },
     environment.jwt.secret,
-    {
-      expiresIn: environment.jwt.expiresIn,
-    },
+    // {
+    //   expiresIn: environment.jwt.expiresIn,
+    // },
   );
 
   return {

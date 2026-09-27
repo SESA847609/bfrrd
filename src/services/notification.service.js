@@ -1,6 +1,8 @@
 const Notification = require("../models/Notification");
-
-// Create notification
+const Registration = require('../models/Registration');
+const Event = require('../models/Event');
+const notificationService = require('./notification.service');
+ 
 const createNotification = async ({
     userId,
     title,
@@ -19,7 +21,6 @@ const createNotification = async ({
     return notification;
 };
 
-// Get user's notifications
 const getUserNotifications = async (userId) => {
     return Notification.find({
         user: userId,
@@ -30,7 +31,6 @@ const getUserNotifications = async (userId) => {
         });
 };
 
-// Get unread notifications
 const getUnreadNotifications = async (userId) => {
     return Notification.find({
         user: userId,
@@ -42,7 +42,6 @@ const getUnreadNotifications = async (userId) => {
         });
 };
 
-// Mark notification as read
 const markAsRead = async (notificationId, userId) => {
     const notification = await Notification.findOneAndUpdate(
         {
@@ -68,7 +67,6 @@ const markAsRead = async (notificationId, userId) => {
     return notification;
 };
 
-// Mark all notifications as read
 const markAllAsRead = async (userId) => {
     await Notification.updateMany(
         {
@@ -82,11 +80,25 @@ const markAllAsRead = async (userId) => {
 
     return true;
 };
+const deleteNotification = async (notificationId, userId) => {
+    const notification = await Notification.findOneAndDelete({
+        _id: notificationId,
+        user: userId,
+    });
 
+    if (!notification) {
+        const error = new Error("Notification not found");
+        error.status = 404;
+        throw error;
+    }
+
+    return notification;
+};
 module.exports = {
     createNotification,
     getUserNotifications,
     getUnreadNotifications,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
 };

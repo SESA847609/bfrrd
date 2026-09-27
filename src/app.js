@@ -11,16 +11,31 @@ const attendanceRoutes = require("./routes/attendance.routes");
 const notificationRoutes = require("./routes/notification.routes");
 const adminRoutes = require("./routes/admin.routes");
 
-app.use(helmet());
 /* * CORS */
 //app.use(cors({ origin: environment.frontendUrl, credentials: true }));
-app.use(
-  cors({
-    origin: environment.frontendUrl,
-    credentials: true,
-  }),
-);
+// app.use(
+//   cors({
+//     origin: environment.frontendUrl,
+//     credentials: true,
+//   }),
+// );
+const scheme = environment.useHttps ? "https" : "http";
+const allowedOrigins = [
+  `${scheme}://localhost:4200`,
+  `${scheme}://10.229.62.81:4200`,
+];
 
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked: ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -31,7 +46,12 @@ const limiter = rateLimit({
     message: "Too many requests, please try again later.",
   },
 });
-app.use(express.json({ limit: "1mb" }));
+
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
+app.use(express.json());
+//app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(limiter);
 app.use("/api/auth", authRoutes);

@@ -1,51 +1,9 @@
 const QRCode = require("qrcode");
-
 const Attendance = require("../models/Attendance");
-
 const Registration = require("../models/Registration");
-
 const Event = require("../models/Event");
+const notificationService = require("./notification.service");
 
-// // Generate QR for a registration
-// const generateRegistrationQR = async (registrationId, userId) => {
-//   const registration = await Registration.findById(registrationId);
-
-//   if (!registration) {
-//     const error = new Error("Registration not found");
-
-//     error.status = 404;
-//     throw error;
-//   }
-
-//   // Make sure this registration belongs
-//   // to the logged-in user
-//   if (registration.user.toString() !== userId.toString()) {
-//     const error = new Error(
-//       "You can only generate QR for your own registration",
-//     );
-
-//     error.status = 403;
-//     throw error;
-//   }
-
-//   if (registration.status !== "registered") {
-//     const error = new Error("This registration is not active");
-
-//     error.status = 400;
-//     throw error;
-//   }
-
-//   const qrData = JSON.stringify({
-//     eventId: registration.event.toString(),
-//   });
-
-//   const qrCode = await QRCode.toDataURL(qrData);
-
-//   return {
-//     registrationId: registration._id,
-//     qrCode,
-//   };
-// };
 const generateEventQR = async (eventId) => {
   const event = await Event.findById(eventId);
 
@@ -66,9 +24,8 @@ const generateEventQR = async (eventId) => {
     qrCode,
   };
 };
-// Check in user
+
 const markAttendance = async ({ eventId, userId }) => {
-  // 1. Check event
   const event = await Event.findById(eventId);
 
   if (!event) {
@@ -77,7 +34,6 @@ const markAttendance = async ({ eventId, userId }) => {
     throw error;
   }
 
-  // 2. Find logged-in user's registration for this event
   const registration = await Registration.findOne({
     event: eventId,
     user: userId,
@@ -93,7 +49,6 @@ const markAttendance = async ({ eventId, userId }) => {
     throw error;
   }
 
-  // 3. Check event timing
   const now = new Date();
 
   if (now < event.startDate) {
@@ -114,7 +69,6 @@ const markAttendance = async ({ eventId, userId }) => {
     throw error;
   }
 
-  // 4. Prevent duplicate attendance
   const existingAttendance = await Attendance.findOne({
     registration: registration._id,
   });
@@ -128,7 +82,6 @@ const markAttendance = async ({ eventId, userId }) => {
     throw error;
   }
 
-  // 5. Create attendance
   const attendance = await Attendance.create({
     registration: registration._id,
     user: userId,
@@ -136,12 +89,24 @@ const markAttendance = async ({ eventId, userId }) => {
     checkedInBy: userId,
   });
 
-  // 6. Update registration
   registration.status = "attended";
 
   await registration.save();
 
-  // 7. Return attendance
+  try {
+    const notification = await notificationService.createNotification({
+      userId,
+      title: "Attendance Marked",
+      message: `Your attendance has been successfully marked for ${event.title}.`,
+      type: "attendance",
+      eventId: event._id,
+    });
+
+    console.log("ATTENDANCE NOTIFICATION CREATED:", notification);
+  } catch (error) {
+    console.error("ATTENDANCE NOTIFICATION ERROR:", error);
+  }
+
   return Attendance.findById(attendance._id)
     .populate("user", "name email phone")
     .populate("event", "title location startDate endDate")
@@ -149,7 +114,6 @@ const markAttendance = async ({ eventId, userId }) => {
 };
 
 module.exports = {
-  // generateRegistrationQR,
   generateEventQR,
   markAttendance,
 };

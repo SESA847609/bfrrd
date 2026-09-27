@@ -1,6 +1,5 @@
 const notificationService = require("../services/notification.service");
 
-// GET /api/notifications
 const getNotifications = async (req, res, next) => {
   try {
     const notifications = await notificationService.getUserNotifications(
@@ -16,7 +15,6 @@ const getNotifications = async (req, res, next) => {
   }
 };
 
-// GET /api/notifications/unread
 const getUnreadNotifications = async (req, res, next) => {
   try {
     const notifications = await notificationService.getUnreadNotifications(
@@ -32,7 +30,6 @@ const getUnreadNotifications = async (req, res, next) => {
   }
 };
 
-// PUT /api/notifications/:id/read
 const markAsRead = async (req, res, next) => {
   try {
     const notification = await notificationService.markAsRead(
@@ -50,7 +47,6 @@ const markAsRead = async (req, res, next) => {
   }
 };
 
-// PUT /api/notifications/read-all
 const markAllAsRead = async (req, res, next) => {
   try {
     await notificationService.markAllAsRead(req.user.userId);
@@ -83,10 +79,27 @@ const createTestNotification = async (req, res, next) => {
     next(error);
   }
 };
+const deleteNotification = async (req, res, next) => {
+  try {
+    const notification = await notificationService.deleteNotification(
+      req.params.id,
+      req.user.userId,
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Notification deleted",
+      data: notification,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   getNotifications,
   getUnreadNotifications,
   markAsRead,
   markAllAsRead,
   createTestNotification,
+  deleteNotification,
 };

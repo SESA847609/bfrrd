@@ -1,6 +1,5 @@
 const attendanceService = require("../services/attendance.service");
 
-// GET event QR
 const generateQR = async (req, res, next) => {
   try {
     const result = await attendanceService.generateEventQR(
@@ -16,7 +15,6 @@ const generateQR = async (req, res, next) => {
   }
 };
 
-// POST attendance
 const markAttendance = async (req, res, next) => {
   try {
     const { eventId } = req.body;
